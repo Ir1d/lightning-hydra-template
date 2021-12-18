@@ -15,6 +15,12 @@ from src.utils import utils
 
 log = utils.get_logger(__name__)
 
+def remove_keys_with_val(item, val):
+    if not hasattr(item, 'items'):
+        return item
+    else:
+        return {key: remove_keys_with_val(value, val) for key, value in item.items() if key != val}
+
 
 def train(config: DictConfig) -> Optional[float]:
     """Contains training pipeline.
@@ -35,9 +41,14 @@ def train(config: DictConfig) -> Optional[float]:
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
+    # log.info(str(config.datamodule))
     # Init lightning model
     log.info(f"Instantiating model <{config.model._target_}>")
-    model: LightningModule = hydra.utils.instantiate(config.model)
+    # log.info(config)
+    # newconfig = remove_keys_with_val(config, '_target_')
+    # log.info(newconfig)
+    model: LightningModule = hydra.utils.instantiate(config.model, all_conf=config, _recursive_=False)
+    # model: LightningModule = hydra.utils.instantiate(config.model, all_conf=newconfig)
 
     # Init lightning callbacks
     callbacks: List[Callback] = []
